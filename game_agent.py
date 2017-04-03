@@ -352,58 +352,65 @@ class CustomPlayer:
                
                 #print('alphabeta')
                 values[move] = self.alphabeta(next_game, depth-1, alpha, beta, not maximizing_player)
+                
                 if (type(values[move]) == float):
                     print('maximizing player:', maximizing_player)
+        
                     if(not maximizing_player):
-                        if (values[move] < alpha):
-                            print('pruning minimizing layer')
-                            break
+                        if (values[move] <= alpha):
                         
+                            break
+                    
                     else:
                           
-                        if (values[move] >= beta):
+                        if (values[move] > beta):
+                            
+                        
                             break
-                        alpha = min(alpha, values[move])
-                        beta = max(beta,values[move])
-        
+                    alpha = max(alpha, values[move])
+                    beta = min(values[move],beta)
+                    
                 else:
                     values[move] = values[move][0]
+                    
                     if(not maximizing_player ):
-                        if (values[move]< alpha):
+                        if (values[move]<= alpha):
+                             
                             
-                            print('pruning minimizing layer')
                             break
+                        
                         else:
-                            if (values[move] >= beta):
-                               break
-                            alpha = max(alpha, values[move])
-                            beta = min(alpha,beta) 
+                            if (values[move] > beta):
+                                
+                                break
+                        
                     else:
+                           
+                        if (values[move] > beta):
                             
-                        if (values[move] >= beta):
                             break
-                        alpha = max(alpha, values[move])
-                        beta = min(alpha,beta)
-    
+                        
+                    alpha = max(alpha, values[move])
+                    beta = min(values[move],beta)
                 if (values[move] == 0):
                     if self.time_left() < self.TIMER_THRESHOLD:
                         print('timeout minimax 5')
                         raise Timeout()
                     values[move] = self.score(game, game.inactive_player)
                     print('score 5:', values[move])
-                
+                    
                 print('alpha:', alpha)
                 print('beta:', beta)
-                
+            
             if (maximizing_player and values):
                 max_value = max(values, key=lambda key:values[key])
                 print('values max:', values)
-                alpha = max(alpha,values[max_value])
+                #alpha = max(alpha,values[max_value])
                 return values[max_value], max_value
             elif values:
                 min_value = min(values, key=lambda key:values[key])
                 print('values min', values)
-                beta = min(beta, values[min_value])
+                #beta = min(beta, values[min_value])
                 return values[min_value], min_value
        
         if self.time_left() < self.TIMER_THRESHOLD:
