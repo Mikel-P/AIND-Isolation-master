@@ -286,135 +286,52 @@ class CustomPlayer:
             raise Timeout()
 
         values = {}
+    
         
-        """if(depth > 0): 
-            print("minimax legal moves: " , game.get_legal_moves())
-            for move in game.get_legal_moves():
-                print('maximizing', maximizing_player)
-                print("move: ", move)
-                next_game = game.forecast_move(move)
-                if (not type(alpha1) == float):
-                    alpha1 = alpha1[0]
-                if (not type(beta1) == float):
-                    beta1 = beta1[0]
-                print("alpha1:", alpha1)
-                print("beta1:", beta1)
-                if (type(alpha1) == float and type(beta1) == float):
-                    if (not maximizing_player):
-                        if (beta1 < alpha1):
-                            print('debo salir beta < alfa')
-                            break
-                    else:
-                        if (alpha1 >= beta1):
-                            print('debo salir')
-                            break
-                values[move] =  self.alphabeta(next_game, depth-1, alpha1, beta1, not maximizing_player)
-                if maximizing_player:
-                    alpha1 = values[move]
-                else:
-                    beta1 = values[move]
-                if (values[move] == 0):
-                    if self.time_left() < self.TIMER_THRESHOLD:
-                        print('timeout minimax 5')
-                        raise Timeout()
-                    
-                    values[move] = self.score(game, game.inactive_player)
-                    
-            if (not values):
-               
-                return self.score(game, game.inactive_player)
-            if (maximizing_player and values):
-                max_value = max(values, key=lambda key:values[key])
-                return values[max_value], max_value
-            elif values:
-                min_value = min(values, key=lambda key:values[key])
-                return values[min_value], min_value
-            
-       
-        if self.time_left() < self.TIMER_THRESHOLD:
-            print('timeout minimax 3')
-            raise Timeout()
-        #print('score fuera bucle', self.score(game, game.inactive_player))
-        return self.score(game, game.inactive_player)"""
-        
-        if(depth > 0): 
-            
+        if(depth == 0): 
+            return self.score(game, game.inactive_player)
+        if (maximizing_player):
             print("alphabeta legal moves: " , game.get_legal_moves())
             
             for move in game.get_legal_moves():
                
-                
-                if self.time_left() < self.TIMER_THRESHOLD:
-                     print('timeout minimax 2')
-                     raise Timeout()
-                #print("move: ", move)
                 next_game = game.forecast_move(move)
-               
-                #print('alphabeta')
+              
                 values[move] = self.alphabeta(next_game, depth-1, alpha, beta, not maximizing_player)
                 
-                if (type(values[move]) == float):
-                    print('maximizing player:', maximizing_player)
-        
-                    if(not maximizing_player):
-                        if (values[move] <= alpha):
+                if (not type(values[move]) == float):
+                        values[move] = values[move][0]
+                alpha = max(alpha, values[move])
                         
-                            break
-                    
-                    else:
-                          
-                        if (values[move] > beta):
-                            
+                if (beta <= alpha):
                         
-                            break
-                    alpha = max(alpha, values[move])
-                    beta = min(values[move],beta)
-                    
-                else:
-                    values[move] = values[move][0]
-                    
-                    if(not maximizing_player ):
-                        if (values[move]<= alpha):
-                             
-                            
-                            break
+                    break
+         
+        else:
+            for move in game.get_legal_moves():
+               
+                next_game = game.forecast_move(move)
+               
+                
+                values[move] = self.alphabeta(next_game, depth-1, alpha, beta, not maximizing_player)
+                
+                if (not type(values[move]) == float):
+                    values[move] = values[move][0]   
+                beta = min(beta, values[move])
                         
-                        else:
-                            if (values[move] > beta):
-                                
-                                break
+                if (beta <= alpha):
                         
-                    else:
-                           
-                        if (values[move] > beta):
-                            
-                            break
-                        
-                    alpha = max(alpha, values[move])
-                    beta = min(values[move],beta)
-                if (values[move] == 0):
-                    if self.time_left() < self.TIMER_THRESHOLD:
-                        print('timeout minimax 5')
-                        raise Timeout()
-                    values[move] = self.score(game, game.inactive_player)
-                    print('score 5:', values[move])
-                    
-                print('alpha:', alpha)
-                print('beta:', beta)
+                    break
             
-            if (maximizing_player and values):
-                max_value = max(values, key=lambda key:values[key])
-                print('values max:', values)
-                #alpha = max(alpha,values[max_value])
-                return values[max_value], max_value
-            elif values:
-                min_value = min(values, key=lambda key:values[key])
-                print('values min', values)
-                #beta = min(beta, values[min_value])
-                return values[min_value], min_value
-       
-        if self.time_left() < self.TIMER_THRESHOLD:
-            print('timeout minimax 3')
-            raise Timeout()
-        #print('score fuera bucle', self.score(game, game.inactive_player))
+            
+        if (maximizing_player and values):
+            max_value = max(values, key=lambda key:values[key])
+            print('values max:', values)
+            return values[max_value], max_value
+        elif values:
+            min_value = min(values, key=lambda key:values[key])
+            print('values min', values)
+            return values[min_value], min_value
+            
+            #print('score fuera bucle', self.score(game, game.inactive_player))
         return self.score(game, game.inactive_player)
