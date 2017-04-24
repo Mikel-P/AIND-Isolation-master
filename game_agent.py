@@ -7,6 +7,8 @@ You must test your agent's strength against a set of agents with known
 relative strength using tournament.py and include the results in your report.
 """
 import random
+from math import sqrt
+from math import exp
 
 
 class Timeout(Exception):
@@ -40,14 +42,20 @@ def custom_score(game, player):
     
     player_moves_available = game.get_legal_moves(player)
     opponent_moves_available = game.get_legal_moves(game.get_opponent(player))
-    print("legal moves:", game.get_legal_moves())
+    """print("legal moves:", game.get_legal_moves())
     print("player:", player)
     print('available moves:', len(player_moves_available))
     print("opponent:", game.get_opponent(player))
-    print('available opponent moves:', len(opponent_moves_available))
-    return len(player_moves_available)+0.00 - len(opponent_moves_available)
-
-
+    print('available opponent moves:', len(opponent_moves_available))"""
+    #heuristic 1
+    #return len(player_moves_available)+0.00 - len(opponent_moves_available)
+     
+    #heuristic 2
+    #return len(player_moves_available)+0.00- len(opponent_moves_available)/1-sqrt((len(player_moves_available)+0.00- len(opponent_moves_available))**2)
+    
+    #heuristic 3
+    return exp((len(player_moves_available)+0.00- len(opponent_moves_available)))
+    
 class CustomPlayer:
     """Game-playing agent that chooses a move using your evaluation function
     and a depth-limited minimax algorithm with alpha-beta pruning. You must
@@ -124,6 +132,9 @@ class CustomPlayer:
         """
 
         self.time_left = time_left
+        
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise Timeout()
 
         # TODO: finish this function!
 
@@ -139,36 +150,38 @@ class CustomPlayer:
             # automatically catch the exception raised by the search method
             # when the timer gets close to expiring
             once = True
-            while(time_left() and once):
+            while(self.time_left() and once and legal_moves):
                 if (self.iterative == True):
                     depth = depth+1
                 else:
                     once = False
                 first = True
-                print("legal moves:", legal_moves)
-                
+                #print("legal moves:", legal_moves)
+                if self.time_left() < self.TIMER_THRESHOLD:
+                    #print('timeout minimax')
+                    raise Timeout()
                 for move in legal_moves:
                     if (first):
                         max_value = move
                         first = False
                     game_alt = game.forecast_move(move)
-                    
-                      
-                    value = self.minimax(game_alt,depth)
+                    if self.time_left() < self.TIMER_THRESHOLD:
+                        #print('timeout minimax')
+                        raise Timeout()
+                    if (self.method == 'minimax'):  
+                        value = self.minimax(game_alt,depth)
+                    else:
+                        value = self.alphabeta(game_alt,depth)
                     if (type(value) == float):
                         moves[move] = value
-                    if (moves):
+                    elif (moves):
                         max_value = max(moves, key=lambda key:moves[key])
-                           
-                            #print('max_value:', max_value)
-                        #else:
-                            #print("skip move", move_alt)
                 
         except Timeout:
             # Handle any actions required at timeout, if necessary
-            print('timeout max value', max_value)
+            #print('timeout max value', max_value)
             return max_value
-        print('max_value',max_value)
+        #print('max_value',max_value)
         return max_value
 
     def minimax(self, game, depth, maximizing_player=True):
@@ -202,43 +215,53 @@ class CustomPlayer:
                 to pass the project unit tests; you cannot call any other
                 evaluation function directly.
         """
+        #print("minimax")
         if self.time_left() < self.TIMER_THRESHOLD:
-            print('timeout minimax')
+            #print('timeout minimax')
             raise Timeout()
         #First we obtain all posible moves to create the tree of posibilities
         #print(game.to_string())
         values = {}
+        
         if(depth > 0): 
+            
             #print("minimax legal moves: " , game.get_legal_moves())
             for move in game.get_legal_moves():
                 if self.time_left() < self.TIMER_THRESHOLD:
-                     print('timeout minimax 2')
+                     #print('timeout minimax 2')
                      raise Timeout()
                 #print("move: ", move)
                 next_game = game.forecast_move(move)
-                values[move] = self.minimax(next_game, depth-1, not maximizing_player)
-                if (values[move] == 0):
-                    if self.time_left() < self.TIMER_THRESHOLD:
-                        print('timeout minimax 5')
-                        raise Timeout()
-                    values[move] = self.score(game, game.inactive_player)
-            if (not values):
+                result = self.minimax(next_game, depth-1, not maximizing_player)
+                
+                
+                #print("result",result)
                 if self.time_left() < self.TIMER_THRESHOLD:
-                    print('timeout minimax 4')
+                    #print('timeout minimax 3')
                     raise Timeout()
-                return self.score(game, game.inactive_player)
+                values[move] = max(result[0], self.score(game, game.inactive_player))
+                
             if (maximizing_player and values):
+                #print(values)
                 max_value = max(values, key=lambda key:values[key])
                 return values[max_value], max_value
+            
             elif values:
+                #print(values)
                 min_value = min(values, key=lambda key:values[key])
                 return values[min_value], min_value
+            else:
+                if self.time_left() < self.TIMER_THRESHOLD:
+                    #print('timeout minimax 4')
+                    raise Timeout()
+                return self.score(game, game.inactive_player), (-1,-1)
+                
        
         if self.time_left() < self.TIMER_THRESHOLD:
-            print('timeout minimax 3')
+            #print('timeout minimax 5')
             raise Timeout()
         #print('score fuera bucle', self.score(game, game.inactive_player))
-        return self.score(game, game.inactive_player)
+        return self.score(game, game.inactive_player)+0.0,(-1,-1)
         
         
           
@@ -282,6 +305,7 @@ class CustomPlayer:
                 to pass the project unit tests; you cannot call any other
                 evaluation function directly.
         """
+        #print("alphabeta")
         if self.time_left() < self.TIMER_THRESHOLD:
             raise Timeout()
 
@@ -291,7 +315,7 @@ class CustomPlayer:
         if(depth == 0): 
             return self.score(game, game.inactive_player)
         if (maximizing_player):
-            print("alphabeta legal moves: " , game.get_legal_moves())
+            #print("alphabeta legal moves: " , game.get_legal_moves())
             
             for move in game.get_legal_moves():
                
@@ -302,7 +326,6 @@ class CustomPlayer:
                 if (not type(values[move]) == float):
                         values[move] = values[move][0]
                 alpha = max(alpha, values[move])
-                        
                 if (beta <= alpha):
                         
                     break
@@ -318,7 +341,6 @@ class CustomPlayer:
                 if (not type(values[move]) == float):
                     values[move] = values[move][0]   
                 beta = min(beta, values[move])
-                        
                 if (beta <= alpha):
                         
                     break
@@ -326,11 +348,11 @@ class CustomPlayer:
             
         if (maximizing_player and values):
             max_value = max(values, key=lambda key:values[key])
-            print('values max:', values)
+            #print('values max:', values)
             return values[max_value], max_value
         elif values:
             min_value = min(values, key=lambda key:values[key])
-            print('values min', values)
+            #print('values min', values)
             return values[min_value], min_value
             
             #print('score fuera bucle', self.score(game, game.inactive_player))
